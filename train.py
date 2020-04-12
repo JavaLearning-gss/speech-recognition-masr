@@ -4,22 +4,27 @@ import data
 from models.conv import GatedConv
 from tqdm import tqdm
 from decoder import GreedyDecoder
-from warpctc_pytorch import CTCLoss
+# from warpctc_pytorch import CTCLoss
+from torch_baidu_ctc import ctc_loss, CTCLoss
 import tensorboardX as tensorboard
 import torch.nn.functional as F
 import json
+import os
 
-# device='cpu'
-device='cuda'
+save_path='pretrained3'
+os.makedirs(save_path,exist_ok=True)
+
+device = torch.device('cuda:1' if torch.cuda.is_available() else 'cpu')
+
 
 def train(
     model,
-    epochs=1000,
-    batch_size=64,
-    train_index_path="data/train_data_aishell.index",
-    dev_index_path="data/train_data_aishell.index",
-    labels_path="data/labels.json",
-    learning_rate=0.6,
+    epochs=150,
+    batch_size=16,
+    train_index_path="./train.index",
+    dev_index_path="./dev.index",
+    labels_path="./labels.json",
+    learning_rate=0.1,
     momentum=0.8,
     max_grad_norm=0.2,
     weight_decay=0,
@@ -37,6 +42,7 @@ def train(
         dev_dataset, batch_size=batch_size, num_workers=8
     )
     parameters = model.parameters()
+    # parameters = list(filter(lambda p: p.requires_grad, model.parameters()))
     optimizer = torch.optim.SGD(
         parameters,
         lr=learning_rate,
@@ -44,7 +50,8 @@ def train(
         nesterov=True,
         weight_decay=weight_decay,
     )
-    ctcloss = CTCLoss(size_average=True)
+    # ctcloss = CTCLoss(size_average=True)
+    # ctcloss = nn.CTCLoss(reduction='mean')
     # lr_sched = torch.optim.lr_scheduler.ExponentialLR(optimizer, 0.985)
     writer = tensorboard.SummaryWriter()
     gstep = 0
@@ -59,7 +66,9 @@ def train(
             x = x.to(device)
             out, out_lens = model(x, x_lens)
             out = out.transpose(0, 1).transpose(0, 2)
-            loss = ctcloss(out, y, out_lens, y_lens)
+            # loss = ctcloss(out, y, out_lens, y_lens)
+            loss = ctc_loss(out, y, out_lens, y_lens, reduction="mean")
+            # loss = ctcloss(nn.functional.log_softmax(out), y, out_lens, y_lens)
             optimizer.zero_grad()
             loss.backward()
             nn.utils.clip_grad_norm_(model.parameters(), max_grad_norm)
@@ -77,7 +86,7 @@ def train(
         writer.add_scalar("loss/epoch", epoch_loss, epoch)
         writer.add_scalar("cer/epoch", cer, epoch)
         print("Epoch {}: Loss= {}, CER = {}".format(epoch, epoch_loss, cer))
-        torch.save(model, "pretrained/model_{}.pth".format(epoch))
+        torch.save(model, "{}/model_{}.pth".format(save_path,epoch))
 
 
 def get_lr(optimizer):
@@ -113,10 +122,11 @@ def eval(model, dataloader):
 
 
 if __name__ == "__main__":
-    with open("data/labels.json") as f:
+    with open("./labels.json") as f:
         vocabulary = json.load(f)
         vocabulary = "".join(vocabulary)
     model = GatedConv(vocabulary)
+    if(not os.path.exists(save_path)):
+        os.mkdir(save_path)
     model.to(device)
-    # model.to("cuda")
     train(model)
