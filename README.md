@@ -9,6 +9,7 @@
 + tqdm                   4.43.0
 + scikit-learn           0.22.2.post1
 + python-Levenshtein     0.12.0
++ librosa                0.7.2
 
 MASR的特点是：
 
@@ -22,6 +23,10 @@ MASR的特点是：
   直接使用该项目进行语音识别，识别过程**不需要GPU**。
 
 * **识别率高！**
+
+- 在aishell上的CER最好的为0.148323453303828
+- 在aishell,thchs30上的CER最好的为0.16458840910828668
+
 
 ## 原理
 
@@ -55,16 +60,16 @@ MASR提供可以直接使用的预训练模型，如果你想自己训练，参�
 1. 克隆本项目到本地。
 
    ```sh
-   git clone https://github.com/libai3/masr.git
+   git clone https://github.com/w5688414/speech-recognition-masr.git
    ```
 
 2. 从[这里](https://pan.baidu.com/s/1HmQqZXsyYz28fQ0XTfB8SA)（**提取码：xhks**）下载**预训练模型**和**测试音频文件**，并将它们拷贝到对应位置。
 
    ```sh
-   mkdir masr/pretrained
-   cp ~/Downloads/gated-conv.pth masr/pretrained/
-   cp ~/Downloads/test.wav masr/
-   cd masr
+   mkdir speech-recognition-masr/pretrained
+   cp ~/Downloads/gated-conv.pth speech-recognition-masr/pretrained/
+   cp ~/Downloads/test.wav speech-recognition-masr/
+   cd speech-recognition-masr
    ```
 
 3. 打开测试文件，听一下，说的是：「你好，很高兴认识你」。
@@ -147,7 +152,7 @@ python examples/demo-record-recognize.py
    下载完成后，执行
 
    ```sh
-   cd masr
+   cd requirements.txt
    mkdir lm/
    cp ~/Downloads/zh_giga.no_cna_cmn.prune01244.klm lm/
    ```
