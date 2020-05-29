@@ -2,31 +2,19 @@
 
 **MASR**是一个基于**端到端的深度神经网络**的**开箱即用**的**中文普通话语音识别**工具。
 
-+ PyAudio                            0.2.11
-+ torch-baidu-ctc        0.3.0
-+ tensorboardX           2.0
-+ torch                  1.1.0
-+ tqdm                   4.43.0
-+ scikit-learn           0.22.2.post1
-+ python-Levenshtein     0.12.0
-+ librosa                0.7.2
+最新更新：现已支持docker！告别繁琐安装过程！参见[使用docker](#使用docker)
 
 MASR的特点是：
 
 * **开箱即用**
 
-- 只需要[不到5分钟](#5分钟上手)，你就可以运行本项目并完成第一次中文语音识别
-- 原作者的模型使用了warpctc_pytorch,在安装的时候总是出问题，这里替换成了torch-baidu-ctc，训练的时候一样能够收敛
+  只需要[不到5分钟](#5分钟上手)，你就可以运行本项目并完成第一次中文语音识别
 
 * **使用与训练分离**
 
   直接使用该项目进行语音识别，识别过程**不需要GPU**。
 
 * **识别率高！**
-
-- 在aishell上的CER最好的为0.148323453303828
-- 在aishell,thchs30上的CER最好的为0.16458840910828668
-
 
 ## 原理
 
@@ -40,6 +28,7 @@ MASR使用的是门控卷积神经网络（Gated Convolutional Network），网�
 
 *什么叫特定场景的语料训练的语言模型？比如你使用游戏中的语音识别，它更倾向于将你的话识别成你在玩游戏时可能说的话，比如「貂蝉被蓝打死了」。而在其他场景下，「貂蝉被蓝打死了」根本就不是一句通顺的话。不信你和一个只读过三国演义没玩过王者荣耀的人说「貂蝉被蓝打死了」，你确定ta不会反问你：「啥？貂蝉被谁打死了？lan是谁？」*
 
+在单卡GTX 1080Ti上，模型每迭代一个epoch大约需要20分钟。（实验室的CUDA版本较低，不排除更新CUDA版本后会快一些的可能。）
 
 <img src="images/train.svg">
 
@@ -60,16 +49,16 @@ MASR提供可以直接使用的预训练模型，如果你想自己训练，参�
 1. 克隆本项目到本地。
 
    ```sh
-   git clone https://github.com/w5688414/speech-recognition-masr.git
+   git clone https://github.com/libai3/masr.git
    ```
 
-2. 从[这里](https://pan.baidu.com/s/1zORUmJB9ZdlKnEa1-GB66g )（**提取码：a41w**）下载**预训练模型**和**测试音频文件**，并将它们拷贝到对应位置。
+2. 从[这里](https://pan.baidu.com/s/1HmQqZXsyYz28fQ0XTfB8SA)（**提取码：xhks**）下载**预训练模型**和**测试音频文件**，并将它们拷贝到对应位置。
 
    ```sh
-   mkdir speech-recognition-masr/pretrained
-   cp ~/Downloads/gated-conv.pth speech-recognition-masr/pretrained/
-   cp ~/Downloads/test.wav speech-recognition-masr/
-   cd speech-recognition-masr
+   mkdir masr/pretrained
+   cp ~/Downloads/gated-conv.pth masr/pretrained/
+   cp ~/Downloads/test.wav masr/
+   cd masr
    ```
 
 3. 打开测试文件，听一下，说的是：「你好，很高兴认识你」。
@@ -152,7 +141,7 @@ python examples/demo-record-recognize.py
    下载完成后，执行
 
    ```sh
-   cd requirements.txt
+   cd masr
    mkdir lm/
    cp ~/Downloads/zh_giga.no_cna_cmn.prune01244.klm lm/
    ```
@@ -248,35 +237,10 @@ labels.json是字典文件，应包含数据集标注中出现过的所有字符
 ]
 ```
 
-### 制作数据集
-
-+ 提供了5个数据集的支持，可根据情况选择
-```bash
-python3 process_aidatatang_200zh.py
-python3 process_data_aishell.py
-python3 process_data_thchs30.py
-python3 process_MAGICDATA.py
-python3 process_ST-CMDS.py
-```
-+ 生成index文件
-
-需要修改一下路径
-```bash
-python3 split_data.py
-```
-+ 生成json文件
-
-需要修改一下路径
-
-```bash
-python3 merge_json.py
-```
-
-准备好数据集以后，就可以开始训练了。使用项目根目录的[train.py](/train.py)来训练模型，它提供了训练用的函数，请注意修改预训练模型的保存路径（默认为pretrained/model_{epoch}.pth）。
-
+准备好数据集以后，就可以开始训练了。[examples/train.py](examples/train.py)目前有一些问题，请暂时使用项目根目录的[train.py](/train.py)来训练模型，它提供了训练用的函数，请注意修改预训练模型的保存路径（默认为pretrained/model_{epoch}.pth）。
 
 ## Issue区规范
 
-如果你在使用时遇到问题或者有什么想法，可以在[issue](https://github.com/w5688414/speech-recognition-masr/issues)区提出来。
+如果你在使用时遇到问题或者有什么想法，可以在[issue](https://github.com/libai3/masr/issues)区提出来。
 
 大家都是聪明的人，想必都明白准确清晰的提问更容易得到热心的帮助；同理，低质量的Issue会不受理睬或被close掉。
